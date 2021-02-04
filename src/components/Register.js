@@ -39,8 +39,7 @@ export default function Register() {
     const values = {
       password: data.password,
       email: data.email,
-      fullname: data.fullname,
-      phonenumber: data.phonenumber
+      fullname: data.fullname
     }
 
     axios

@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mySql = require('mysql');
+const { parse } = require('querystring');
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -17,7 +18,8 @@ var connection = mySql.createConnection({
     user: 'root',
     password: "password",
     database: "test_db",    
-    port: "3306"
+    port: "3306",
+    multipleStatements: true
 })
 
 connection.connect((err) => {
@@ -29,15 +31,20 @@ connection.connect((err) => {
 });
 
 
+
+// bcrypt.compare(password, this.password, function(err, isMatch) {
+//     if (err) return callback(err);
+//     callback(null, isMatch);
+//   });
 //users table
-connection.query("CREATE TABLE users (id int  AUTO_INCREMENT PRIMARY KEY,fullname varchar(255) not null, email varchar(50) NOT NULL,phonenumber BIGINT, password varchar(255) not null, role varchar(255) not null); ", (err, rows) => {
+connection.query("CREATE TABLE users (id int  AUTO_INCREMENT PRIMARY KEY,fullname varchar(255) not null, email varchar(50) NOT NULL, password varchar(255) not null, role varchar(255) not null); ", (err, rows) => {
     if(err) {
         console.log(err.sqlMessage,'user table error');
     } else{ 
         console.log("table users created");
     }
 });
-connection.query("INSERT into users values(1,'arjun','arjun@gmail.com',9551933375,'1234566','Admin');", (err, rows) => {
+connection.query("INSERT into users values(1,'arjun','arjun@gmail.com','1234566','Admin');", (err, rows) => {
     if(err) {
         console.log(err.sqlMessage,'user table insertion error');
     } else{ 
@@ -46,16 +53,8 @@ connection.query("INSERT into users values(1,'arjun','arjun@gmail.com',955193337
 });
 
 //tables creation
-                        //ADMIN TABLE
-connection.query("CREATE TABLE admin (admin_id int  AUTO_INCREMENT PRIMARY KEY,admin_dept varchar(25) not null, admin_email varchar(25) not null); ", (err, rows) => {
-    if(err) {
-        console.log(err.sqlMessage,'admin table error');
-    } else{ 
-        console.log("table ADMIN created");
-    }
-});
                         //FACULTY TABLE
-connection.query("CREATE TABLE faculty (fac_id int  AUTO_INCREMENT PRIMARY KEY,name varchar(25) not null, email varchar(50) NOT NULL,subject varchar(25) not null,phonenumber BIGINT); ", (err, rows) => {
+connection.query("CREATE TABLE faculty (fac_id int  AUTO_INCREMENT PRIMARY KEY,name varchar(25) not null, email varchar(50) NOT NULL,subject varchar(50) not null,phonenumber BIGINT); ", (err, rows) => {
     if(err) {
         console.log(err.sqlMessage,'FACULTY table error');
     } else{ 
@@ -63,7 +62,7 @@ connection.query("CREATE TABLE faculty (fac_id int  AUTO_INCREMENT PRIMARY KEY,n
     }
 });
                         //STUDENT TABLE
-connection.query("CREATE TABLE student (student_id int  AUTO_INCREMENT PRIMARY KEY,name varchar(50) not null, email varchar(50) NOT NULL,year_of_join int,semester int, branch varchar(25)); ", (err, rows) => {
+connection.query("CREATE TABLE student (student_id int  AUTO_INCREMENT PRIMARY KEY,name varchar(50) not null, email varchar(50) NOT NULL,section varchar(5),semester int, branch varchar(25)); ", (err, rows) => {
     if(err) {
         console.log(err.sqlMessage,'STUDENT table error');
     } else{ 
@@ -87,7 +86,7 @@ connection.query("CREATE TABLE FACULTY_REPLACEMENT (replacement_no int  AUTO_INC
     }
 });
                         //LAB TABLE
-connection.query("CREATE TABLE LAB (LAB_id int  AUTO_INCREMENT PRIMARY KEY,CREDITS INT, DEPARTMENT_ID INT, FACULTY_ID INT); ", (err, rows) => {
+connection.query("CREATE TABLE LAB (LAB_CODE VARCHAR(20)  PRIMARY KEY,CREDITS INT, DEPARTMENT varchar(10), FACULTY varchar(50)); ", (err, rows) => {
     if(err) {
         console.log(err.sqlMessage,'LAB table error');
     } else{ 
@@ -95,7 +94,7 @@ connection.query("CREATE TABLE LAB (LAB_id int  AUTO_INCREMENT PRIMARY KEY,CREDI
     }
 });
                         //COURSE TABLE
-connection.query("CREATE TABLE COURSE (COURSE_CODE int  AUTO_INCREMENT PRIMARY KEY,COURSE_NAME VARCHAR(25), COURSE_CREDITS INT); ", (err, rows) => {
+connection.query("CREATE TABLE COURSE (COURSE_CODE varchar(10) PRIMARY KEY,COURSE_NAME VARCHAR(50), COURSE_CREDITS INT, dept varchar(20)); ", (err, rows) => {
     if(err) {
         console.log(err.sqlMessage,'COURSE table error');
     } else{ 
@@ -110,16 +109,8 @@ connection.query("CREATE TABLE CLASS (ROOM_NO int  AUTO_INCREMENT PRIMARY KEY,DE
         console.log("table CLASS created");
     }
 });
-                        //PHONE DETAILS TABLE
-connection.query("CREATE TABLE PHONE_DETAILS (TIME_TABLE_id int  AUTO_INCREMENT PRIMARY KEY,FACULTY_NO BIGINT); ", (err, rows) => {
-    if(err) {
-        console.log(err.sqlMessage,'PHONE_DETAILS table error');
-    } else{ 
-        console.log("table PHONE_DETAILS created");
-    }
-});
                         //TIME TABLE TABLE
-connection.query("CREATE TABLE TIME_TABLE (TIME_TABLE_ID int  AUTO_INCREMENT PRIMARY KEY,ADMIN_ID INT, STUDENT_ID INT, FAC_ID INT,DEP_ID INT, LAB_ID INT, REPLACEMENT_NO INT, COURSE_CODE INT, ROOM_NO INT); ", (err, rows) => {
+connection.query("CREATE TABLE TIME_TABLE (day varchar(20), slot int,dept_name varchar(20),course_name varchar(50), SECTION VARCHAR(5),semester int, primary key(slot,day,dept_name,section,semester)); ", (err, rows) => {
     if(err) {
         console.log(err.sqlMessage,'TIME_TABLE table error');
     } else{ 
@@ -144,7 +135,9 @@ app.post('/login', (req, res) => {
                 if(result[0].password == password){
                     res.send({
                         "code":200,
-                        "message":"login sucessfull 🙌"
+                        "message":"login sucessfull 🙌",
+                        "name": result[0].fullname,
+                        "role": result[0].role,
                       })
                 }
                 else{
@@ -207,23 +200,53 @@ app.post('/api/getdata/:table', (req, res) => {
 });
 
 app.post('/api/insert/:table', (req, res) => {
+    console.log('req body', req.body);
     const tName = req.params.table;
     var values = Object.values(req.body);
-    console.log(values);
-    connection.query(`insert into ${tName} values (?);`, [values], (err, result,FIELDS) => {
-        if(err) {
-            res.send({
-                "code":400,
-                "message":"error ocurred.Please try again later 😉"
-              })
-              console.log(err);
-        } else{ 
-            res.send({
-                "code":200,
-                "message":"inserted into db successfully"
-              })
-        }
-    });
+    const name = String(req.body.name);
+    const email = String(req.body.email);
+    var role = '';
+    var password = '';
+    if (tName === 'Student') {
+        role = 'Student';
+        password = String(req.body.email);
+    } else if (tName === 'Faculty') {
+        role = 'Faculty',
+        password = String(req.body.email+req.body.name);
+    }
+
+    if (tName === 'Student' || tName === 'Faculty') {
+        connection.query(`insert into ${tName} values (?);INSERT into users(fullname, email, password, role) values ('${name}','${email}','${password}','${role}');`, [values], (err, result,FIELDS) => {
+            if(err) {
+                res.send({
+                    "code":400,
+                    "message":"error ocurred.Please try again later 😉"
+                  })
+                  console.log(err);
+            } else{ 
+                res.send({
+                    "code":200,
+                    "message":"inserted into db successfully"
+                  })
+            }
+        });
+    } else {
+        connection.query(`insert into ${tName} values (?);`, [values], (err, result,FIELDS) => {
+            if(err) {
+                res.send({
+                    "code":400,
+                    "message":"error ocurred.Please try again later 😉"
+                  })
+                  console.log(err);
+            } else{ 
+                res.send({
+                    "code":200,
+                    "message":"inserted into db successfully"
+                  })
+            }
+        });
+    }
+    
 });
 
 app.post('/api/delete/:table', (req, res) => {
@@ -248,6 +271,7 @@ app.post('/api/delete/:table', (req, res) => {
 
 app.post('/api/update/:table', (req, res) => {
     const tName = req.params.table;
+    console.log(req);
     var id = req.body[1][0];
     var values = req.body[0];
     connection.query(`update  ${tName} set ? where ${id} = ${req.body[0][id]};`, [values], (err, result,FIELDS) => {
@@ -265,6 +289,179 @@ app.post('/api/update/:table', (req, res) => {
         }
     });
 });
+
+app.post('/api/query', (req, res) => {
+    var query = Object.keys(req.body);
+    connection.query(query[0], (err, result,FIELDS) => {
+        if(err) {
+            res.send({
+                "code":400,
+                "message":"error ocurred.Please try again later 😉"
+              })
+              console.log(err);
+        } else{ 
+            res.send({
+                "code":200,
+                "message":"query exected",
+                "data": result
+              })
+        }
+    });
+});
+
+app.post('/api/query/dept', (req, res) => {
+    var values = Object.keys(req.body);
+    connection.query('select course_name from course where dept = ?',[values[0]], (err, result,FIELDS) => {
+
+        if(err) {
+            res.send({
+                "code":400,
+                "message":"error ocurred.Please try again later 😉"
+              })
+              console.log(err);
+        } else{ 
+            res.send({
+                "code":200,
+                "message":"query exected",
+                "data": result
+              })
+        }
+    });
+});
+
+app.post('/api/query/time1', (req, res) => {
+    var values = Object.keys(req.body);
+    connection.query('select branch,section,semester from student where name = ?',[values[0]], (err, result,FIELDS) => {
+        if(err) {
+            res.send({
+                "code":400,
+                "message":"error ocurred.Please try again later 😉"
+              })
+              console.log(err);
+        } else{ 
+            res.send({
+                "code":200,
+                "message":"query exected",
+                "data": result
+              })
+        }
+    });
+});
+
+app.post('/api/query/time2', (req, res) => {
+    var values = Object.keys(req.body);
+    connection.query('select subject from faculty where name = ?',[values[0]], (err, result,FIELDS) => {
+        console.log("fac res", result);
+        if(err) {
+            res.send({
+                "code":400,
+                "message":"error ocurred.Please try again later 😉"
+              })
+              console.log(err);
+        } else{ 
+            res.send({
+                "code":200,
+                "message":"query exected",
+                "data": result
+              })
+        }
+    });
+});
+
+app.post('/api/query/time3', (req, res) => {
+    connection.query('select day,slot,course_name from time_table where dept_name = ? and section = ? and semester = ?',[req.body.branch,req.body.section,req.body.semester], (err, result,FIELDS) => {
+        if(err) {
+            res.send({
+                "code":400,
+                "message":"error ocurred.Please try again later 😉"
+              })
+              console.log(err);
+        } else{ 
+            res.send({
+                "code":200,
+                "message":"query exected",
+                "data": result
+              })
+        }
+    });
+});
+
+app.post('/api/query/time4', (req, res) => {
+    console.log('fac1 res', req);
+    connection.query('select day,slot,dept_name,section,semester from time_table where course_name = ?',[req.body.subject], (err, result,FIELDS) => {
+        if(err) {
+            res.send({
+                "code":400,
+                "message":"error ocurred.Please try again later 😉"
+              })
+              console.log(err);
+        } else{ 
+            res.send({
+                "code":200,
+                "message":"query exected",
+                "data": result
+              })
+        }
+    });
+});
+
+app.post('/api/timetable', (req, res) => {
+    var keys = Object.keys(req.body);
+    var values = Object.values(req.body);
+    connection.query('insert into time_table values (?)',[values], (err, result,FIELDS) => {
+        if(err) {
+            res.send({
+                "code":400,
+                "message":err.code+"  "+err.sqlMessage
+              })
+              console.log(err);
+        } else{ 
+            res.send({
+                "code":200,
+                "message":"query exected",
+                "data": result
+              })
+        }
+    });
+});
+
+app.post('/api/stats', (req, res) => {
+    connection.query('select count(*) from student;select count(*) from Faculty; select count(*) from Department; select count(*) from lab; select count(*) from course;', (err, result,FIELDS) => {
+        if(err) {
+            res.send({
+                "code":400,
+                "message":"error ocurred.Please try again later 😉"
+              })
+              console.log(err);
+        } else{ 
+            res.send({
+                "code":200,
+                "message":"query exected",
+                "data": result
+              })
+        }
+    });
+});
+
+app.post('/api/stats1', (req, res) => {
+    connection.query('select count(course_code) from course where dept = "CSE";select count(course_code) from course where dept = "ECE"; select count(course_code) from course where dept = "CIVIL"; select count(course_code) from course where dept = "MECH"; select count(course_code) from course where dept = "EIE";', (err, result,FIELDS) => {
+        if(err) {
+            res.send({
+                "code":400,
+                "message":"error ocurred.Please try again later 😉"
+              })
+              console.log(err);
+        } else{ 
+            res.send({
+                "code":200,
+                "message":"query exected",
+                "data": result
+              })
+        }
+    });
+});
+
+
 
 const port = process.env.PORT || 8080;
 console.log(port);

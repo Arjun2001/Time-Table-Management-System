@@ -45,6 +45,9 @@ export default function Login() {
       .then((res) => {
         if (res.data.code === 200){
           alert('Logged in succesfully');
+          
+          window.localStorage.setItem('userName', res.data.name);
+          window.localStorage.setItem('role', res.data.role);
           history.push('/home');
         } else {
           alert(res.data.message);
@@ -71,6 +74,7 @@ export default function Login() {
         <InputField
           ref={inputRefs.current[1]}
           name="password"
+          type="password"
           label="Password*:"
           validation="required|min:6"
           onChange={handleChange}

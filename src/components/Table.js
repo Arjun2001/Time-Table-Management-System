@@ -2,7 +2,8 @@ import React,{ useEffect } from 'react';
 import MaterialTable from 'material-table';
 import TableData from './LandingPage/tabledata';
 import axios from 'axios';
-// var TableData = require('./LandingPage/tabledata');
+import ReactLoading from "react-loading";
+import "bootstrap/dist/css/bootstrap.css";
 
 import { forwardRef } from 'react';
 
@@ -63,26 +64,36 @@ export default function MaterialTableDemo(props) {
   }
 
   var temp = Object.byString(TableData,active)
+  const [tableKey, setTableKey] = React.useState(0);
+  
 
   useEffect(() => {
-    axios
-      .post(`http://localhost:8080/api/getdata/${active}`)
-      .then((res) => {
-        if (res.data.code === 200){
-          temp.data = res.data.content
-        } else {
-          console.log(active,res.data.message)
-        }
-      })
-      .catch(err => {
-        console.error(err);
-      });
-      setState(temp);
-      console.log('state',state);
+    setTimeout(() => {
+      const getData = async () => {
+        setTableKey(0);
+        await axios
+        .post(`http://localhost:8080/api/getdata/${active}`)
+        .then((res) => {
+          if (res.data.code === 200){
+            temp.data = res.data.content
+          } else {
+            console.log(active,res.data.message)
+          }
+        })
+        .catch(err => {
+          console.error(err);
+        });
+        setState(temp);
+        setTableKey(1);
+        console.log('state',state);
+      }
+      getData();
+    },1200);
   }, [temp]);
 
   
   const [state, setState] = React.useState(temp);
+  
 
   const tableName = active+" "+"Information";
 
@@ -122,10 +133,11 @@ export default function MaterialTableDemo(props) {
   }
 
   const update = (props) => {
-    console.log('update',props);
     var data = [];
+    
     data.push(props);
     data.push(Object.keys(props));
+    console.log('props', props,data);
     axios
       .post(`http://localhost:8080/api/update/${active}`,data)
       .then((res) => {
@@ -140,8 +152,8 @@ export default function MaterialTableDemo(props) {
       });
     return props;
   }
-
   return (
+    tableKey ===1 ? 
     <MaterialTable
       icons={tableIcons}
       title={tableName}
@@ -178,12 +190,12 @@ export default function MaterialTableDemo(props) {
               resolve();
               setState((prevState) => {
                 const data = [...prevState.data];
-                data.splice(data.indexOf(deleteRow(oldData)), 1);             // {admin_id: 23123, admin_dept: "ece", admin_email: "sdjhskdj@sdfj.com", tableData: {…}}
+                data.splice(data.indexOf(deleteRow(oldData)), 1);
                 return { ...prevState, data };
               });
             }, 600);
           }),
       }}
-    />
-  );
+    /> : <ReactLoading type={"bubbles"} color={"#16a596"} />
+  ); 
 }

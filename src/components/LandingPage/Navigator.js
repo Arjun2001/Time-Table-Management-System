@@ -17,34 +17,37 @@ import SupervisedUserCircleIcon from '@material-ui/icons/SupervisedUserCircle';
 import DomainIcon from '@material-ui/icons/Domain';
 import SwapHorizontalCircleIcon from '@material-ui/icons/SwapHorizontalCircle';
 import ClassIcon from '@material-ui/icons/Class';
-import PhoneAndroidIcon from '@material-ui/icons/PhoneAndroid';
+import AssessmentOutlinedIcon from '@material-ui/icons/AssessmentOutlined';
 import TableChartIcon from '@material-ui/icons/TableChart';
+import CreateIcon from '@material-ui/icons/Create';
 
 const categories = [
   {
     id: 'Tables',
     children: [
-      { id: 'Admin', icon: <SupervisedUserCircleIcon />, active: true },
       { id: 'Student', icon: <PeopleOutlineIcon />},
       { id: 'Faculty', icon: <PeopleIcon /> },
       { id: 'Department', icon: <DomainIcon />},
       { id: 'Faculty_Replacement', icon: <SwapHorizontalCircleIcon />},
       { id: 'Lab', icon: <DnsRoundedIcon /> },
       { id: 'Course', icon: <ImportContactsIcon /> },
-      { id: 'Class', icon: <ClassIcon /> },
-      { id: 'Phone_Details', icon: <PhoneAndroidIcon /> },
-      { id: 'Time_Table', icon: <TableChartIcon /> }
+      // { id: 'Class', icon: <ClassIcon /> }
       
     ],
   },
   {
-    id:'Create',
+    id: 'Generate Time Table',
     children: [
-      {id: 'New Student', icon: <PeopleOutlineIcon />},
-      {id: 'New Faculty', icon: <PeopleIcon />},
-      {id: 'New Admin', icon: <SupervisedUserCircleIcon />}
-    ],
+      { id: 'Create', icon: <CreateIcon />},
+      { id: 'Time_Table', icon: <TableChartIcon /> }
+    ]
   },
+  {
+    id: "Statistics",
+    children: [
+      { id: 'Reports', icon: <AssessmentOutlinedIcon />}
+    ]
+  }
 ];
 
 const styles = (theme) => ({

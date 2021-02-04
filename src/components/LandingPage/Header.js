@@ -7,11 +7,10 @@ import Hidden from '@material-ui/core/Hidden';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import NotificationsIcon from '@material-ui/icons/Notifications';
-import Tab from '@material-ui/core/Tab';
-import Tabs from '@material-ui/core/Tabs';
 import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import { withStyles } from '@material-ui/core/styles';
 
 const lightColor = 'rgba(255, 255, 255, 0.7)';
@@ -41,6 +40,11 @@ const styles = (theme) => ({
 function Header(props) {
   const { classes, active, onDrawerToggle } = props;
 
+const logout = () => {
+  localStorage.clear();
+  window.location.href = '/';
+}
+
   return (
     <React.Fragment>
       <AppBar color="primary" position="sticky" elevation={0}>
@@ -58,9 +62,9 @@ function Header(props) {
                 </IconButton>
               </Grid>
             </Hidden>
-            <Grid container alignItems="center" spacing={1}/>
+            <Grid container  spacing={1}/>
             <Grid item xs>
-                <Typography color="inherit" variant="h5" component="h1">
+                <Typography color="inherit" variant="h5" component="h1" align="center">
                   {active}
                 </Typography>
             </Grid>
@@ -72,9 +76,16 @@ function Header(props) {
               </Tooltip>
             </Grid>
             <Grid item>
-            <Tooltip title="Username">
+            <Tooltip title={localStorage.getItem('userName')}>
               <IconButton color="inherit" className={classes.iconButtonAvatar}>
-                <Avatar src="/static/images/avatar/1.jpg" alt="My Avatar" />
+                <Avatar alt="My Avatar" />
+              </IconButton>
+              </Tooltip>
+            </Grid>
+            <Grid item>
+            <Tooltip title='Logout'>
+              <IconButton color="inherit" className={classes.iconButtonAvatar} onClick={logout}>
+                <ExitToAppIcon />
               </IconButton>
               </Tooltip>
             </Grid>

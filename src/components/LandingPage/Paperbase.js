@@ -7,7 +7,8 @@ import Hidden from '@material-ui/core/Hidden';
 import Navigator from './Navigator';
 import Header from './Header';
 import Table from '../Table';
-import CreateNew from '../../components/CreateNew';
+import TimeTableSelect from '../TimeTable/TimeTableSelect';
+import Graph from '../Graph';
 
 let theme = createMuiTheme({
   palette: {
@@ -161,22 +162,23 @@ function Paperbase(props) {
   var history = useHistory();
 
   const tempFunc = (event) => {
-    const text = event.target.innerText
-    if (text.substring(0, 3) === 'New') {
-      history.push('/createnew');
-    } else{
-      setActive(text);
-    }
+    setActive(event.target.innerText);
   }
 
   function GenerateTable (props) {
     if (props.active === 'Home') {
-      return <h1 style={{color:'blue',alignItems:'center'}}>Hello Everyone there!</h1>
+      var username = localStorage.getItem('userName').toUpperCase();
+      return <h1 style={{color:'blue',alignItems:'center'}}>Hello there,  {username}!</h1>
+    } else if (props.active === 'Create') {
+      return <TimeTableSelect />
+    } else if(props.active === 'Reports') {
+      return <Graph />
     } else {
       return <Table active = {active}/>
     }
   }
 
+  
   return (
 
     <ThemeProvider theme={theme}>
@@ -200,7 +202,6 @@ function Paperbase(props) {
         <div className={classes.app}>
           <Header onDrawerToggle={handleDrawerToggle} active = {active} />
           <main className={classes.main}>
-            
             <GenerateTable active = {active} />
           </main>
           <footer className={classes.footer}>
